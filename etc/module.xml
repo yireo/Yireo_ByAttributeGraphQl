@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Yireo ByAttributeGraphQl for Magento
+ *
+ * @package     Yireo_ByAttributeGraphQl
+ * @author      Yireo (https://www.yireo.com/)
+ * @copyright   Copyright 2017 Yireo (https://www.yireo.com/)
+ * @license     Open Source License (OSL v3)
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="Yireo_ByAttributeGraphQl" setup_version="0.0.1">
+        <sequence>
+            <module name="Magento_GraphQl"/>
+            <module name="Yireo_ByAttribute"/>
+        </sequence>
+    </module>
+</config>

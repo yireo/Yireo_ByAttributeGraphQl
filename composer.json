@@ -1,0 +1,21 @@
+{
+  "name": "magento/module-bundle-graph-ql",
+  "description": "N/A",
+  "type": "magento2-module",
+  "require": {
+    "magento/module-graph-ql": "*",
+    "yireo/magento2-byattribute2": "*"
+  },
+  "license": [
+    "OSL-3.0",
+    "AFL-3.0"
+  ],
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "Yireo\\ByAttributeGraphQl\\": ""
+    }
+  }
+}

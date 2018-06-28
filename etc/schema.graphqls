@@ -1,0 +1,12 @@
+type ByAttribute @doc(description: "ByAttribute defines a listing of product attribute values") {
+    attribute_code: String @doc(description: "The code of the product attribute")
+    label: String @doc(description: "The label for this product attribute") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\Attribute\\Label")
+    options: [ByAttributeAttribute] @doc(description: "An array of values for this product attribute") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\Attribute\Value")
+}
+
+type ByAttributeAttribute @doc(description: "") {
+    attribute_id: Int @doc(description: "The ID assigned to this product attribute")
+    label: String @doc(description: "The label for this product attribute value") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\Attribute\\Value\\Label")
+    show_count: Boolean @doc(description: "Show product count or not")
+    link: String @doc(description: "Link to product attribute value page")
+}
