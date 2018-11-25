@@ -1,12 +1,21 @@
-type ByAttribute @doc(description: "ByAttribute defines a listing of product attribute values") {
-    attribute_code: String @doc(description: "The code of the product attribute")
-    label: String @doc(description: "The label for this product attribute") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\Attribute\\Label")
-    options: [ByAttributeAttribute] @doc(description: "An array of values for this product attribute") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\Attribute\Value")
+type Query {
+    productAttribute (
+        code: String @doc(description: "Attribute code of the Product Attribute")
+    ): ProductAttribute
+    @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\ProductAttribute")
+    @doc(description: "The Product Attribute query returns data of a Product Attribute")
 }
 
-type ByAttributeAttribute @doc(description: "") {
-    attribute_id: Int @doc(description: "The ID assigned to this product attribute")
-    label: String @doc(description: "The label for this product attribute value") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\Attribute\\Value\\Label")
-    show_count: Boolean @doc(description: "Show product count or not")
-    link: String @doc(description: "Link to product attribute value page")
+type ProductAttribute @doc(description: "Product Attribute data") {
+    id: String @doc(description: "Id of this Product Attribute")
+    code: String @doc(description: "Code of this Product Attribute")
+    label: String @doc(description: "Name of this Product Attribute")
+    default_value: String @doc(description: "Default value for this Product Attribute")
+    options: [ProductAttributeOption] @doc(description: "List of values for this Product Attribute")
+}
+
+type ProductAttributeOption @doc(description: "Product Attribute option") {
+    label: String @doc(description: "Id of the Product Attribute option")
+    value: String @doc(description: "Label of this Product Attribute")
+    count: String @doc(description: "How many products have this value")
 }
