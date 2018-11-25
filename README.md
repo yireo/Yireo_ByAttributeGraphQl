@@ -23,3 +23,13 @@ Here are some sample GraphQL queries to show the usage of this extension:
   }
 }
 ```
+```graphql
+{
+  productAttribute(code:"color") {
+    id
+    options {
+      value
+    }
+  }
+}
+```
