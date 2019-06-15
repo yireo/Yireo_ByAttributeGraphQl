@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace Yireo\ByAttributeGraphQl\Model\Resolver;
 
+use Exception;
 use Magento\Eav\Api\Data\AttributeInterface;
 use Magento\Eav\Model\Config;
+
+use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Config\Element\Field as ElementField;
 use Magento\Framework\GraphQl\Exception\GraphQlInputException;
@@ -43,8 +46,8 @@ class ProductAttribute implements ResolverInterface
      * @param ResolveInfo $info
      * @param array|null $value
      * @param array|null $args
-     * @throws \Exception
      * @return mixed|Value
+     * @throws Exception
      */
     public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
     {
@@ -59,18 +62,30 @@ class ProductAttribute implements ResolverInterface
             throw new GraphQlNoSuchEntityException(__('No such attribute could be found'));
         }
 
+        $categoryId = 0;
+        if (isset($args['category_id'])) {
+            $categoryId = (int)$args['category_id'];
+        }
+
+        $options = $this->getOptionsDataByAttribute($attribute, $categoryId);
+
         $attributeData = [
             'id' => $attribute->getAttributeId(),
             'code' => $attribute->getAttributeCode(),
             'label' => $attribute->getDefaultFrontendLabel(),
             'default_value' => (string)$attribute->getDefaultValue(),
-            'options' => $this->getOptionsDataByAttribute($attribute),
+            'options' => $options,
         ];
 
         return $attributeData;
     }
 
-    private function getOptionsDataByAttribute(AttributeInterface $attribute)
+    /**
+     * @param AttributeInterface $attribute
+     * @param int $categoryId
+     * @return array
+     */
+    private function getOptionsDataByAttribute(AttributeInterface $attribute, int $categoryId)
     {
         $options = $attribute->getOptions();
         $optionsData = [];
@@ -80,9 +95,11 @@ class ProductAttribute implements ResolverInterface
             }
 
             $optionsData[] = [
+                'attribute_id' => $attribute->getAttributeId(),
+                'attribute_code' => $attribute->getAttributeCode(),
+                'category_id' => $categoryId,
                 'label' => $option->getLabel(),
-                'value' => $option->getValue(),
-                'count' => 0,
+                'value' => $option->getValue()
             ];
         }
 
