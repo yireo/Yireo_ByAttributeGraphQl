@@ -19,13 +19,17 @@ Here are some sample GraphQL queries to show the usage of this extension:
     options {
       value
       label
+      product_count
     }
   }
 }
 ```
+
+Or if you want to return less information (and include a category filter):
+
 ```graphql
 {
-  productAttribute(code:"color") {
+  productAttribute(code:"color", category_id: 42) {
     id
     options {
       value
@@ -33,3 +37,7 @@ Here are some sample GraphQL queries to show the usage of this extension:
   }
 }
 ```
+
+# TODO
+- Cache vital parts of product count
+- Refactor `ProductCounter` and split it up in smaller classes
