@@ -1,6 +1,7 @@
 type Query {
     productAttribute (
         code: String @doc(description: "Attribute code of the Product Attribute")
+        category_id: Int @doc(description: "Optional category ID")
     ): ProductAttribute
     @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\ProductAttribute")
     @doc(description: "The Product Attribute query returns data of a Product Attribute")
@@ -17,5 +18,5 @@ type ProductAttribute @doc(description: "Product Attribute data") {
 type ProductAttributeOption @doc(description: "Product Attribute option") {
     label: String @doc(description: "Id of the Product Attribute option")
     value: String @doc(description: "Label of this Product Attribute")
-    count: String @doc(description: "How many products have this value")
+    product_count: String @doc(description: "How many products have this value") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\ProductCount")
 }
