@@ -11,9 +11,9 @@ use Magento\Eav\Model\ResourceModel\Entity\Attribute\Option\CollectionFactory as
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\LocalizedException;
 
-use Zend_Db_Select;
 use Zend_Db_Select_Exception;
 use Zend_Db_Statement_Exception;
+use Laminas\Db\Sql\Select;
 
 /**
  * Class ProductCounter
@@ -83,6 +83,7 @@ class ProductCounter
      * @return int
      * @throws LocalizedException
      * @throws Zend_Db_Select_Exception
+     * @throws Zend_Db_Statement_Exception
      */
     public function getProductCountByAttributeValue(
         AttributeInterface $attribute,
@@ -131,18 +132,18 @@ class ProductCounter
         $select = $this->getSelect();
         $select
             ->from(['main_table' => $mainTable])
-            ->reset(Zend_Db_Select::COLUMNS)
+            ->reset(Select::COLUMNS)
             ->columns([
                 'option_id' => 'main_table.option_id',
                 'value' => 'option_value.value',
                 'count' => 'COUNT(product_value.entity_id)'
             ])
-            ->joinLeft(
+            ->join(
                 ['option_value' => $optionValueTable],
                 'option_value.option_id = main_table.option_id',
                 ''
             )
-            ->joinLeft(
+            ->join(
                 ['product_value' => $productValueTable],
                 'FIND_IN_SET(main_table.option_id, product_value.value)',
                 ''
@@ -177,14 +178,14 @@ class ProductCounter
         $select = $this->getSelect();
         $select
             ->from(['main_table' => $mainTable])
-            ->reset(Zend_Db_Select::COLUMNS)
+            ->reset(Select::COLUMNS)
             ->columns(['id' => 'main_table.entity_id'])
-            ->joinLeft(
+            ->join(
                 ['category_product' => $categoryProductTable],
                 'category_product.product_id=main_table.entity_id',
                 ''
             )
-            ->joinLeft(
+            ->join(
                 ['product_value' => $productIntTable],
                 'main_table.entity_id=product_value.entity_id',
                 ''
@@ -207,10 +208,10 @@ class ProductCounter
     }
 
     /**
-     * @return Zend_Db_Select
+     * @return Select
      */
-    private function getSelect(): Zend_Db_Select
+    private function getSelect(): Select
     {
-        return new Zend_Db_Select($this->resourceConnection->getConnection());
+        return new Select($this->resourceConnection->getConnection());
     }
 }
