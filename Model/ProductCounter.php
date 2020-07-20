@@ -11,8 +11,6 @@ use Magento\Eav\Model\ResourceModel\Entity\Attribute\Option\CollectionFactory as
 use Magento\Framework\App\ResourceConnection;
 use Magento\Framework\Exception\LocalizedException;
 
-use Zend_Db_Select_Exception;
-use Zend_Db_Statement_Exception;
 use Laminas\Db\Sql\Select;
 
 /**
@@ -82,8 +80,6 @@ class ProductCounter
      * @param AttributeOptionInterface $attributeOption
      * @return int
      * @throws LocalizedException
-     * @throws Zend_Db_Select_Exception
-     * @throws Zend_Db_Statement_Exception
      */
     public function getProductCountByAttributeValue(
         AttributeInterface $attribute,
@@ -115,8 +111,6 @@ class ProductCounter
     /**
      * @param array $productIds
      * @return array
-     * @throws Zend_Db_Select_Exception
-     * @throws Zend_Db_Statement_Exception
      */
     private function getProductCountForAttributeOptions(array $productIds)
     {
@@ -160,8 +154,6 @@ class ProductCounter
     /**
      * @return mixed
      * @throws LocalizedException
-     * @throws Zend_Db_Select_Exception
-     * @throws Zend_Db_Statement_Exception
      */
     private function getProductIds()
     {

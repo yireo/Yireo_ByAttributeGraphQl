@@ -17,7 +17,6 @@ use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Yireo\ByAttributeGraphQl\Model\ProductCounter;
-use Zend_Db_Select_Exception;
 
 /**
  * Class ProductCount
