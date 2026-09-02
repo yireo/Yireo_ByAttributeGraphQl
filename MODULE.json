@@ -1,0 +1,9 @@
+{
+    "module_name": "Yireo_ByAttributeGraphQl",
+    "composer_name": "yireo/magento2-byattribute-graph-ql",
+    "sequence": [
+        "Magento_Eav",
+        "Magento_Catalog",
+        "Magento_GraphQl"
+    ]
+}
