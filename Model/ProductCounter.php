@@ -9,9 +9,8 @@ use Magento\Eav\Model\Config as EavConfig;
 use Magento\Eav\Model\ResourceModel\Entity\Attribute\Option\CollectionFactory as OptionCollectionFactory;
 
 use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\DB\Select;
 use Magento\Framework\Exception\LocalizedException;
-
-use Laminas\Db\Sql\Select;
 
 /**
  * Class ProductCounter
@@ -204,6 +203,6 @@ class ProductCounter
      */
     private function getSelect(): Select
     {
-        return new Select($this->resourceConnection->getConnection());
+        return $this->resourceConnection->getConnection()->select();
     }
 }

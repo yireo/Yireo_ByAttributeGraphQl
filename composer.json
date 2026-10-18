@@ -20,7 +20,6 @@
         "magento/module-eav": "^100.0|^101.0|^102.0",
         "magento/module-catalog": "^101.0|^102.0|^103.0|^104.0",
         "magento/module-graph-ql": "^100.3",
-        "laminas/laminas-db": "*",
         "php": ">=8.2 <8.6"
     },
     "require-dev": {
