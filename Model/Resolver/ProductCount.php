@@ -58,7 +58,7 @@ class ProductCount implements ResolverInterface
      * @return mixed|Value
      * @throws Exception
      */
-    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
         if (!isset($value['attribute_code'])) {
             throw new GraphQlInputException(__('You should specify a product attribute code (like "color").'));
