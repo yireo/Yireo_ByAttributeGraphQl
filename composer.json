@@ -22,10 +22,6 @@
         "magento/module-graph-ql": "^100.3",
         "php": ">=8.2 <8.6"
     },
-    "require-dev": {
-        "phpunit/phpunit": "*",
-        "composer/composer": "*@dev"
-    },
     "autoload": {
         "psr-4": {
             "Yireo\\ByAttributeGraphQl\\": ""
