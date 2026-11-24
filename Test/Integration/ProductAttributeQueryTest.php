@@ -5,15 +5,15 @@ namespace Yireo\ByAttributeGraphQl\Test\Integration;
 
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
-use Magento\Catalog\Test\Fixture\Attribute as AttributeFixture;
+use Magento\Catalog\Model\ResourceModel\Product\Website as ProductWebsiteResource;
 use Magento\Catalog\Test\Fixture\Category as CategoryFixture;
 use Magento\Catalog\Test\Fixture\MultiselectAttribute as MultiselectAttributeFixture;
 use Magento\Catalog\Test\Fixture\Product as ProductFixture;
 use Magento\Catalog\Test\Fixture\SelectAttribute as SelectAttributeFixture;
 use Magento\Framework\GraphQl\Schema\Type\TypeRegistry;
+use Magento\Framework\Indexer\IndexerRegistry;
 use Magento\Framework\Serialize\SerializerInterface;
 use Magento\GraphQl\Service\GraphQlRequest;
-use Magento\Store\Test\Fixture\Website as WebsiteFixture;
 use Magento\TestFramework\Fixture\AppArea;
 use Magento\TestFramework\Fixture\DataFixture;
 use Magento\TestFramework\Fixture\DataFixtureStorageManager;
@@ -37,28 +37,29 @@ class ProductAttributeQueryTest extends TestCase
         DataFixture(ProductFixture::class, [
             'category_ids' => ['$category.id$'],
             'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_count' => '$attr.option_1$'],
-        ]),
+        ], 'p1'),
         DataFixture(ProductFixture::class, [
             'category_ids' => ['$category.id$'],
             'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_count' => '$attr.option_1$'],
-        ]),
+        ], 'p2'),
         DataFixture(ProductFixture::class, [
             'category_ids' => ['$category.id$'],
             'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_count' => '$attr.option_2$'],
-        ]),
+        ], 'p3'),
         DataFixture(ProductFixture::class, [
             'category_ids' => ['$category.id$'],
             'status' => Status::STATUS_DISABLED,
             'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_count' => '$attr.option_1$'],
-        ]),
+        ], 'p4'),
         DataFixture(ProductFixture::class, [
             'category_ids' => ['$category.id$'],
             'visibility' => Visibility::VISIBILITY_NOT_VISIBLE,
             'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_count' => '$attr.option_1$'],
-        ]),
+        ], 'p5'),
     ]
     public function testProductCountsOnlyIncludeEnabledAndVisibleProducts(): void
     {
+        $this->reindexProducts(['p1', 'p2', 'p3', 'p4', 'p5']);
         $categoryId = (int)$this->getFixture('category')->getId();
 
         $counts = $this->getCounts($this->query(
@@ -83,16 +84,17 @@ class ProductAttributeQueryTest extends TestCase
             'category_ids' => ['$category.id$'],
             'custom_attributes' => [
                 'tax_class_id' => '2',
-                'yireo_bagql_multi' => ['$attr.option_1$', '$attr.option_2$'],
+                'yireo_bagql_multi' => '$attr.option_1$,$attr.option_2$',
             ],
-        ]),
+        ], 'p1'),
         DataFixture(ProductFixture::class, [
             'category_ids' => ['$category.id$'],
             'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_multi' => '$attr.option_2$'],
-        ]),
+        ], 'p2'),
     ]
     public function testMultiselectAttributeIsCountedPerOption(): void
     {
+        $this->reindexProducts(['p1', 'p2']);
         $categoryId = (int)$this->getFixture('category')->getId();
 
         $counts = $this->getCounts($this->query(
@@ -107,31 +109,29 @@ class ProductAttributeQueryTest extends TestCase
             'attribute_code' => 'yireo_bagql_website',
             'is_filterable' => 1,
         ], 'attr'),
-        DataFixture(WebsiteFixture::class, as: 'website'),
         DataFixture(CategoryFixture::class, as: 'category'),
         DataFixture(ProductFixture::class, [
             'category_ids' => ['$category.id$'],
             'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_website' => '$attr.option_1$'],
-            'extension_attributes' => [
-                'website_ids' => ['$website.id$'],
-                'stock_item' => [
-                    'use_config_manage_stock' => true,
-                    'qty' => 100,
-                    'is_qty_decimal' => false,
-                    'is_in_stock' => true,
-                ],
-            ],
-        ]),
+        ], 'p1'),
+        DataFixture(ProductFixture::class, [
+            'category_ids' => ['$category.id$'],
+            'custom_attributes' => ['tax_class_id' => '2', 'yireo_bagql_website' => '$attr.option_1$'],
+        ], 'p2'),
     ]
     public function testProductsOfOtherWebsitesAreNotCounted(): void
     {
+        $this->reindexProducts(['p1', 'p2']);
+        Bootstrap::getObjectManager()->get(ProductWebsiteResource::class)
+            ->removeProducts([1], [(int)$this->getFixture('p2')->getId()]);
+
         $categoryId = (int)$this->getFixture('category')->getId();
 
         $counts = $this->getCounts($this->query(
             '{ productAttribute(code: "yireo_bagql_website", category_id: ' . $categoryId . ') '
             . '{ options { label value product_count } } }'
         ));
-        $this->assertSame(['option_1' => 0, 'option_2' => 0], $counts);
+        $this->assertSame(['option_1' => 1, 'option_2' => 0], $counts);
     }
 
     #[
@@ -166,15 +166,9 @@ class ProductAttributeQueryTest extends TestCase
         $this->assertErrorMessage(self::ATTRIBUTE_NOT_FOUND, $result);
     }
 
-    #[
-        DataFixture(AttributeFixture::class, [
-            'attribute_code' => 'yireo_bagql_text',
-            'is_filterable' => 1,
-        ], 'attr'),
-    ]
     public function testNonOptionAttributeIsNotFound(): void
     {
-        $result = $this->query('{ productAttribute(code: "yireo_bagql_text") { id } }');
+        $result = $this->query('{ productAttribute(code: "price") { id } }');
         $this->assertErrorMessage(self::ATTRIBUTE_NOT_FOUND, $result);
     }
 
@@ -238,6 +232,23 @@ class ProductAttributeQueryTest extends TestCase
 
         $result = $this->query('{ productAttribute(code: "yireo_bagql_invalid", category_id: 999999) { id } }');
         $this->assertErrorMessage(self::CATEGORY_NOT_FOUND, $result);
+    }
+
+    /**
+     * @param string[] $productFixtureNames
+     * @return void
+     */
+    private function reindexProducts(array $productFixtureNames): void
+    {
+        $productIds = [];
+        foreach ($productFixtureNames as $productFixtureName) {
+            $productIds[] = (int)$this->getFixture($productFixtureName)->getId();
+        }
+
+        $indexerRegistry = Bootstrap::getObjectManager()->get(IndexerRegistry::class);
+        foreach (['catalog_product_category', 'catalog_product_attribute', 'cataloginventory_stock'] as $indexerId) {
+            $indexerRegistry->get($indexerId)->reindexList($productIds);
+        }
     }
 
     /**
