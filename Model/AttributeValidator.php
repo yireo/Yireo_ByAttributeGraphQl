@@ -12,7 +12,7 @@ use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
 
 class AttributeValidator
 {
-    private const CODE_PATTERN = '/^[a-z][a-z0-9_]{0,59}$/';
+    private const CODE_PATTERN = '/^[a-z][a-z0-9_]{0,59}$/D';
 
     private const ALLOWED_FRONTEND_INPUTS = ['select', 'multiselect'];
 
