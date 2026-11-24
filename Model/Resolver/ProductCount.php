@@ -3,94 +3,70 @@ declare(strict_types=1);
 
 namespace Yireo\ByAttributeGraphQl\Model\Resolver;
 
-use Exception;
-use Magento\Eav\Api\Data\AttributeInterface;
-use Magento\Eav\Model\Config;
-
+use Magento\Catalog\Model\Category;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\GraphQl\Config\Element\Field;
-use Magento\Framework\GraphQl\Config\Element\Field as ElementField;
-use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
-use Magento\Framework\GraphQl\Query\Resolver\ContextInterface;
-use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
 use Yireo\ByAttributeGraphQl\Model\ProductCounter;
 
-/**
- * Class ProductCount
- * @package Yireo\ByAttributeGraphQl\Model\Resolver
- */
 class ProductCount implements ResolverInterface
 {
-    /**
-     * @var Config
-     */
-    private $eavConfig;
-
-    /**
-     * @var ProductCounter
-     */
-    private $productCounter;
-
-    /**
-     * ProductAttribute constructor.
-     * @param Config $eavConfig
-     * @param ProductCounter $productCounter
-     */
     public function __construct(
-        Config $eavConfig,
-        ProductCounter $productCounter
+        private readonly ProductCounter $productCounter
     ) {
-        $this->eavConfig = $eavConfig;
-        $this->productCounter = $productCounter;
     }
 
     /**
-     * Fetches the data from persistence models and format it according to the GraphQL schema.
-     *
-     * @param ElementField $field
-     * @param ContextInterface $context
+     * @param Field $field
+     * @param mixed $context
      * @param ResolveInfo $info
-     * @param array|null $value
-     * @param array|null $args
-     * @return mixed|Value
-     * @throws Exception
+     * @param array<string, mixed>|null $value
+     * @param array<string, mixed>|null $args
+     * @return int
+     * @throws LocalizedException
      */
     public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
-        if (!isset($value['attribute_code'])) {
-            throw new GraphQlInputException(__('You should specify a product attribute code (like "color").'));
+        $attribute = $value['attribute'] ?? null;
+        if (!$attribute instanceof AbstractAttribute) {
+            throw new LocalizedException(__('"attribute" value should be specified'));
         }
 
-        $attributeCode = $value['attribute_code'];
-        $attribute = $this->eavConfig->getAttribute('catalog_product', $attributeCode);
-
-        if (!$attribute) {
-            throw new GraphQlNoSuchEntityException(__('No such attribute could be found'));
-        }
-
-        $categoryId = 0;
-        if (isset($value['category_id'])) {
-            $categoryId = (int)$value['category_id'];
-        }
-
-        $options = $attribute->getOptions();
-        $option = false;
-        foreach ($options as $option) {
-            if ($option->getValue() === $value['value']) {
-                break;
-            }
-        }
-
-        if ($option === false) {
+        $optionValue = (string)($value['value'] ?? '');
+        if (!$this->hasOption($attribute, $optionValue)) {
             throw new GraphQlNoSuchEntityException(__('No such option could be found'));
         }
 
-        $productCounter = $this->productCounter->setCategoryId($categoryId);
-        $productCount = $productCounter->getProductCountByAttributeValue($attribute, $option);
+        $category = $value['category'] ?? null;
 
-        return $productCount;
+        return $this->productCounter->getProductCount(
+            $attribute,
+            $optionValue,
+            (int)($value['store_id'] ?? 0),
+            $category instanceof Category ? $category : null
+        );
+    }
+
+    /**
+     * @param AbstractAttribute $attribute
+     * @param string $optionValue
+     * @return bool
+     */
+    private function hasOption(AbstractAttribute $attribute, string $optionValue): bool
+    {
+        if ($optionValue === '') {
+            return false;
+        }
+
+        foreach ($attribute->getOptions() as $option) {
+            if ((string)$option->getValue() === $optionValue) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

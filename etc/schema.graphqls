@@ -1,10 +1,11 @@
 type Query {
     productAttribute (
-        code: String @doc(description: "Attribute code of the Product Attribute")
-        category_id: Int @doc(description: "Optional category ID")
+        code: String @doc(description: "Attribute code of a filterable select or multiselect Product Attribute")
+        category_id: Int @doc(description: "Optional ID of an active category within the current store")
     ): ProductAttribute
     @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\ProductAttribute")
-    @doc(description: "The Product Attribute query returns data of a Product Attribute")
+    @doc(description: "The Product Attribute query returns data of a filterable Product Attribute")
+    @cache(cacheIdentity: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\Identity")
 }
 
 type ProductAttribute @doc(description: "Product Attribute data") {
@@ -16,7 +17,7 @@ type ProductAttribute @doc(description: "Product Attribute data") {
 }
 
 type ProductAttributeOption @doc(description: "Product Attribute option") {
-    label: String @doc(description: "Id of the Product Attribute option")
-    value: String @doc(description: "Label of this Product Attribute")
-    product_count: String @doc(description: "How many products have this value") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\ProductCount")
+    label: String @doc(description: "Label of this Product Attribute option")
+    value: String @doc(description: "Value of this Product Attribute option")
+    product_count: Int @doc(description: "How many visible products in the current store have this value") @resolver(class: "Yireo\\ByAttributeGraphQl\\Model\\Resolver\\ProductCount")
 }

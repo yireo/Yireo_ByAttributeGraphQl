@@ -3,51 +3,34 @@ declare(strict_types=1);
 
 namespace Yireo\ByAttributeGraphQl\Model\Resolver;
 
-use Exception;
-use Magento\Eav\Api\Data\AttributeInterface;
-use Magento\Eav\Model\Config;
-
-use Magento\Framework\Exception\LocalizedException;
+use Magento\Catalog\Model\Category;
+use Magento\Eav\Model\Entity\Attribute\AbstractAttribute;
 use Magento\Framework\GraphQl\Config\Element\Field;
-use Magento\Framework\GraphQl\Config\Element\Field as ElementField;
 use Magento\Framework\GraphQl\Exception\GraphQlInputException;
 use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
-use Magento\Framework\GraphQl\Query\Resolver\ContextInterface;
-use Magento\Framework\GraphQl\Query\Resolver\Value;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
+use Magento\Store\Api\Data\StoreInterface;
+use Yireo\ByAttributeGraphQl\Model\AttributeValidator;
+use Yireo\ByAttributeGraphQl\Model\CategoryValidator;
 
-/**
- * Class ProductAttribute
- * @package Yireo\ByAttributeGraphQl\Model\Resolver
- */
 class ProductAttribute implements ResolverInterface
 {
-    /**
-     * @var Config
-     */
-    private $eavConfig;
-
-    /**
-     * ProductAttribute constructor.
-     * @param Config $eavConfig
-     */
     public function __construct(
-        Config $eavConfig
+        private readonly AttributeValidator $attributeValidator,
+        private readonly CategoryValidator $categoryValidator
     ) {
-        $this->eavConfig = $eavConfig;
     }
 
     /**
-     * Fetches the data from persistence models and format it according to the GraphQL schema.
-     *
-     * @param ElementField $field
-     * @param ContextInterface $context
+     * @param Field $field
+     * @param mixed $context
      * @param ResolveInfo $info
-     * @param array|null $value
-     * @param array|null $args
-     * @return mixed|Value
-     * @throws Exception
+     * @param array<string, mixed>|null $value
+     * @param array<string, mixed>|null $args
+     * @return array<string, mixed>
+     * @throws GraphQlInputException
+     * @throws GraphQlNoSuchEntityException
      */
     public function resolve(Field $field, $context, ResolveInfo $info, ?array $value = null, ?array $args = null)
     {
@@ -55,51 +38,49 @@ class ProductAttribute implements ResolverInterface
             throw new GraphQlInputException(__('You should specify a product attribute code (like "color").'));
         }
 
-        $attributeCode = $args['code'];
-        $attribute = $this->eavConfig->getAttribute('catalog_product', $attributeCode);
-
-        if (!$attribute) {
-            throw new GraphQlNoSuchEntityException(__('No such attribute could be found'));
+        $store = $context->getExtensionAttributes()->getStore();
+        if (!$store instanceof StoreInterface) {
+            throw new GraphQlInputException(__('No store could be determined'));
         }
 
-        $categoryId = 0;
-        if (isset($args['category_id'])) {
-            $categoryId = (int)$args['category_id'];
-        }
+        $storeId = (int)$store->getId();
+        $attribute = $this->attributeValidator->getValidAttribute($args['code']);
+        $category = $this->categoryValidator->getValidCategory($args['category_id'] ?? null, $store);
+        $categoryId = $category ? (int)$category->getId() : 0;
 
-        $options = $this->getOptionsDataByAttribute($attribute, $categoryId);
-
-        $attributeData = [
+        return [
             'id' => $attribute->getAttributeId(),
             'code' => $attribute->getAttributeCode(),
-            'label' => $attribute->getDefaultFrontendLabel(),
+            'label' => $attribute->getStoreLabel($storeId),
             'default_value' => (string)$attribute->getDefaultValue(),
-            'options' => $options,
+            'category_id' => $categoryId,
+            'options' => $this->getOptionsData($attribute, $storeId, $category),
         ];
-
-        return $attributeData;
     }
 
     /**
-     * @param AttributeInterface $attribute
-     * @param int $categoryId
-     * @return array
+     * @param AbstractAttribute $attribute
+     * @param int $storeId
+     * @param Category|null $category
+     * @return array<int, array<string, mixed>>
      */
-    private function getOptionsDataByAttribute(AttributeInterface $attribute, int $categoryId)
+    private function getOptionsData(AbstractAttribute $attribute, int $storeId, ?Category $category): array
     {
-        $options = $attribute->getOptions();
+        $attribute->setStoreId($storeId);
+
         $optionsData = [];
-        foreach ($options as $option) {
-            if (!$option->getValue()) {
+        foreach ($attribute->getOptions() as $option) {
+            $optionValue = (string)$option->getValue();
+            if ($optionValue === '') {
                 continue;
             }
 
             $optionsData[] = [
-                'attribute_id' => $attribute->getAttributeId(),
-                'attribute_code' => $attribute->getAttributeCode(),
-                'category_id' => $categoryId,
-                'label' => $option->getLabel(),
-                'value' => $option->getValue()
+                'label' => (string)$option->getLabel(),
+                'value' => $optionValue,
+                'attribute' => $attribute,
+                'store_id' => $storeId,
+                'category' => $category,
             ];
         }
 
