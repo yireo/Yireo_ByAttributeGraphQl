@@ -16,6 +16,7 @@
         }
     ],
     "require": {
+        "ext-pcre": "*",
         "magento/framework": "^103.0.6",
         "magento/module-catalog": "^104.0.6",
         "magento/module-catalog-inventory": "^100.4.6",
@@ -36,6 +37,7 @@
         "yireo/magento2-byattribute2": "*"
     },
     "require-dev": {
+        "ext-json": "*",
         "phpunit/phpunit": "^9.5|^10.0|^11.0|^12.0",
         "yireo/magento2-integration-test-helper": "~0.0"
     }
