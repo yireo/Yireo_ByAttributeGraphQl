@@ -1,6 +1,0 @@
-{
-  "ignore": [
-    "Magento_Catalog",
-    "magento/module-catalog"
-  ]
-}
