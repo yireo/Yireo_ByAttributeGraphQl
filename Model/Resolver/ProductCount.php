@@ -10,6 +10,7 @@ use Magento\Framework\GraphQl\Config\Element\Field;
 use Magento\Framework\GraphQl\Exception\GraphQlNoSuchEntityException;
 use Magento\Framework\GraphQl\Query\ResolverInterface;
 use Magento\Framework\GraphQl\Schema\Type\ResolveInfo;
+use Magento\Store\Api\Data\StoreInterface;
 use Yireo\ByAttributeGraphQl\Model\ProductCounter;
 
 class ProductCount implements ResolverInterface
@@ -40,12 +41,17 @@ class ProductCount implements ResolverInterface
             throw new GraphQlNoSuchEntityException(__('No such option could be found'));
         }
 
+        $store = $value['store'] ?? null;
+        if (!$store instanceof StoreInterface) {
+            throw new LocalizedException(__('"store" value should be specified'));
+        }
+
         $category = $value['category'] ?? null;
 
         return $this->productCounter->getProductCount(
             $attribute,
             $optionValue,
-            (int)($value['store_id'] ?? 0),
+            $store,
             $category instanceof Category ? $category : null
         );
     }

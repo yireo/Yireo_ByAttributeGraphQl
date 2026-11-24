@@ -54,19 +54,19 @@ class ProductAttribute implements ResolverInterface
             'label' => $attribute->getStoreLabel($storeId),
             'default_value' => (string)$attribute->getDefaultValue(),
             'category_id' => $categoryId,
-            'options' => $this->getOptionsData($attribute, $storeId, $category),
+            'options' => $this->getOptionsData($attribute, $store, $category),
         ];
     }
 
     /**
      * @param AbstractAttribute $attribute
-     * @param int $storeId
+     * @param StoreInterface $store
      * @param Category|null $category
      * @return array<int, array<string, mixed>>
      */
-    private function getOptionsData(AbstractAttribute $attribute, int $storeId, ?Category $category): array
+    private function getOptionsData(AbstractAttribute $attribute, StoreInterface $store, ?Category $category): array
     {
-        $attribute->setStoreId($storeId);
+        $attribute->setStoreId((int)$store->getId());
 
         $optionsData = [];
         foreach ($attribute->getOptions() as $option) {
@@ -79,7 +79,7 @@ class ProductAttribute implements ResolverInterface
                 'label' => (string)$option->getLabel(),
                 'value' => $optionValue,
                 'attribute' => $attribute,
-                'store_id' => $storeId,
+                'store' => $store,
                 'category' => $category,
             ];
         }

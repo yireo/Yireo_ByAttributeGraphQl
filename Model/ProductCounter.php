@@ -15,6 +15,7 @@ use Magento\Framework\App\Cache\Type\Collection as CollectionCache;
 use Magento\Framework\DB\Select;
 use Magento\Framework\DB\Sql\Expression;
 use Magento\Framework\Serialize\SerializerInterface;
+use Magento\Store\Api\Data\StoreInterface;
 
 class ProductCounter
 {
@@ -41,28 +42,29 @@ class ProductCounter
     /**
      * @param AbstractAttribute $attribute
      * @param string $optionValue
-     * @param int $storeId
+     * @param StoreInterface $store
      * @param Category|null $category
      * @return int
      */
     public function getProductCount(
         AbstractAttribute $attribute,
         string $optionValue,
-        int $storeId,
+        StoreInterface $store,
         ?Category $category = null
     ): int {
-        $counts = $this->getCounts($attribute, $storeId, $category);
+        $counts = $this->getCounts($attribute, $store, $category);
         return $counts[$optionValue] ?? 0;
     }
 
     /**
      * @param AbstractAttribute $attribute
-     * @param int $storeId
+     * @param StoreInterface $store
      * @param Category|null $category
      * @return array<string, int>
      */
-    public function getCounts(AbstractAttribute $attribute, int $storeId, ?Category $category = null): array
+    public function getCounts(AbstractAttribute $attribute, StoreInterface $store, ?Category $category = null): array
     {
+        $storeId = (int)$store->getId();
         $categoryId = $category ? (int)$category->getId() : 0;
         $cacheKey = implode('_', [self::CACHE_PREFIX, (int)$attribute->getAttributeId(), $storeId, $categoryId]);
         if (isset($this->counts[$cacheKey])) {
@@ -71,7 +73,7 @@ class ProductCounter
 
         $counts = $this->loadFromCache($cacheKey);
         if ($counts === null) {
-            $counts = $this->loadCounts($attribute, $storeId, $category);
+            $counts = $this->loadCounts($attribute, $store, $category);
             $this->saveToCache($cacheKey, $counts, $categoryId);
         }
 
@@ -81,13 +83,14 @@ class ProductCounter
 
     /**
      * @param AbstractAttribute $attribute
-     * @param int $storeId
+     * @param StoreInterface $store
      * @param Category|null $category
      * @return array<string, int>
      */
-    private function loadCounts(AbstractAttribute $attribute, int $storeId, ?Category $category): array
+    private function loadCounts(AbstractAttribute $attribute, StoreInterface $store, ?Category $category): array
     {
-        $collection = $this->getProductCollection($storeId, $category);
+        $storeId = (int)$store->getId();
+        $collection = $this->getProductCollection($store, $category);
         $select = clone $collection->getSelect();
         $select->reset(Select::COLUMNS)
             ->reset(Select::ORDER)
@@ -115,15 +118,17 @@ class ProductCounter
     }
 
     /**
-     * @param int $storeId
+     * @param StoreInterface $store
      * @param Category|null $category
      * @return ProductCollection
      */
-    private function getProductCollection(int $storeId, ?Category $category): ProductCollection
+    private function getProductCollection(StoreInterface $store, ?Category $category): ProductCollection
     {
+        $storeId = (int)$store->getId();
         $collection = $this->productCollectionFactory->create();
         $collection->setStoreId($storeId);
         $collection->addStoreFilter($storeId);
+        $collection->addWebsiteFilter([(int)$store->getWebsiteId()]);
         $collection->addAttributeToFilter('status', Status::STATUS_ENABLED);
         $collection->setVisibility($this->visibility->getVisibleInSiteIds());
 
