@@ -2,9 +2,11 @@
     "module_name": "Yireo_ByAttributeGraphQl",
     "composer_name": "yireo/magento2-byattribute-graph-ql",
     "sequence": [
-        "Magento_Eav",
         "Magento_Catalog",
-        "Magento_GraphQl"
+        "Magento_CatalogInventory",
+        "Magento_Eav",
+        "Magento_GraphQl",
+        "Magento_Store"
     ],
     "phpcs_severity": "6",
     "phpstan_level": "2"
