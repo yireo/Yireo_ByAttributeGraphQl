@@ -9,5 +9,5 @@
         "Magento_Store"
     ],
     "phpcs_severity": "6",
-    "phpstan_level": "2"
+    "phpstan_level": "4"
 }
