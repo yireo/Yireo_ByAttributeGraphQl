@@ -9,5 +9,38 @@
         "Magento_Store"
     ],
     "phpcs_severity": "6",
-    "phpstan_level": "4"
+    "phpstan_level": "4",
+    "php_versions": [
+        "8.1",
+        "8.2",
+        "8.3",
+        "8.4"
+    ],
+    "skip_magento_versions": [],
+    "skip_css_utils": false,
+    "modules": [
+        "Magento_AdminNotification",
+        "Magento_Authorization",
+        "Magento_Backend",
+        "Magento_Catalog",
+        "Magento_CatalogInventory",
+        "Magento_Cms",
+        "Magento_Csp",
+        "Magento_Customer",
+        "Magento_Directory",
+        "Magento_Eav",
+        "Magento_GraphQl",
+        "Magento_Indexer",
+        "Magento_MediaGalleryUiApi",
+        "Magento_Store",
+        "Magento_Theme",
+        "Magento_Variable"
+    ],
+    "components": [],
+    "config": [],
+    "tests": {
+        "unit": 3,
+        "integration": 11,
+        "functional": 0
+    }
 }
