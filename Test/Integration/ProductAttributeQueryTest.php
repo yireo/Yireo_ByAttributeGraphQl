@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Yireo\ByAttributeGraphQl\Test\Integration;
 
+use Magento\Catalog\Model\Product\Action as ProductAction;
 use Magento\Catalog\Model\Product\Attribute\Source\Status;
 use Magento\Catalog\Model\Product\Visibility;
 use Magento\Catalog\Model\ResourceModel\Product\Website as ProductWebsiteResource;
@@ -84,7 +85,7 @@ class ProductAttributeQueryTest extends TestCase
             'category_ids' => ['$category.id$'],
             'custom_attributes' => [
                 'tax_class_id' => '2',
-                'yireo_bagql_multi' => '$attr.option_1$,$attr.option_2$',
+                'yireo_bagql_multi' => '$attr.option_1$',
             ],
         ], 'p1'),
         DataFixture(ProductFixture::class, [
@@ -94,6 +95,13 @@ class ProductAttributeQueryTest extends TestCase
     ]
     public function testMultiselectAttributeIsCountedPerOption(): void
     {
+        $attribute = $this->getFixture('attr');
+        Bootstrap::getObjectManager()->get(ProductAction::class)->updateAttributes(
+            [(int)$this->getFixture('p1')->getId()],
+            ['yireo_bagql_multi' => $attribute->getData('option_1') . ',' . $attribute->getData('option_2')],
+            0
+        );
+
         $this->reindexProducts(['p1', 'p2']);
         $categoryId = (int)$this->getFixture('category')->getId();
 
